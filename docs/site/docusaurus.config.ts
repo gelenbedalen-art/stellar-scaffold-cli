@@ -9,7 +9,6 @@ const GITHUB_REPO = 'https://github.com/stellar-scaffold/cli';
 const config: Config = {
   title: 'Stellar Scaffold',
   tagline: 'The Stellar app lifecycle streamlined',
-  favicon: 'img/favicon.svg',
 
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
   future: {
@@ -108,10 +107,6 @@ const config: Config = {
     },
     navbar: {
       title: 'Stellar Scaffold',
-      logo: {
-        alt: 'Stellar Scaffold logo',
-        src: 'img/logo.svg',
-      },
       items: [
         {
           type: 'docSidebar',
