@@ -30,7 +30,7 @@ The init command creates:
 
 Official templates come from the [Stellar Scaffold templates repo](https://github.com/stellar-scaffold/ui). To build your own, see [Community Templates](./community-templates.md).
 
-With `--no-template` (or `--template none`), the frontend layer is omitted entirely: no `app/`, no `app-lib/`, no JS workspaces, no dependency install. Every contract in [`scaffold.yml`](./configuration.md) is written with `client: false`, so `stellar scaffold build --build-clients` and `watch` deploy contracts without generating TypeScript clients. Remove it from a contract if you later need one.
+With `--no-template` (or `--template none`), the frontend layer is omitted entirely: no `app/`, no `app-lib/`, no JS workspaces, no dependency install. Every contract in [`scaffold.yml`](./configuration.md) is written with `client: false`, so `stellar scaffold build` and `watch` deploy contracts without generating TypeScript clients. Remove it from a contract if you later need one.
 
 ## Generate Command
 
@@ -91,12 +91,12 @@ stellar scaffold build [options]
 
 Options:
 
-- `--build-clients`: Deploy contracts and generate TypeScript client packages for them, as configured in [`scaffold.yml`](./configuration.md)
 - `--network <name>`: Network from `scaffold.yml` to build for. Defaults to `STELLAR_NETWORK`, then the network set with `stellar network use`, then `local`
+- `--build-clients`: Only needed for projects still on `environments.toml`. With a version 2 [`scaffold.yml`](./configuration.md), `build` always deploys contracts and generates their clients as configured there
 - `--list` or `--ls`: List package names in order of build
 - [Standard Soroban contract build options also supported]
 
-`build` validates `scaffold.yml` before compiling and stops if it has errors. Contracts that do not list the selected network are skipped: they are not deployed and not exported from the generated clients `index.ts`. Clients removed from `scaffold.yml` are dropped from `index.ts` on the next build.
+`build` validates `scaffold.yml` before compiling and stops if it has errors. To only compile, use `stellar contract build`. Contracts that do not list the selected network are skipped: they are not deployed and not exported from the generated clients `index.ts`. Clients removed from `scaffold.yml` are dropped from `index.ts` on the next build.
 
 ## Dev Command
 
@@ -108,7 +108,6 @@ stellar scaffold watch [options]
 
 Options:
 
-- `--build-clients`: Generate TypeScript client packages while watching
 - All options from the build command are also supported, including `--network`
 
 `watch` also rebuilds when `scaffold.yml` changes.
@@ -127,11 +126,13 @@ Options:
 
 Clean removes:
 
-- `target/stellar/`, the deployment state for the local and test networks
+- `target/stellar/`, the built Wasm
 - Everything generated into your clients directory, while leaving checked-in files such as `.gitkeep` alone
-- The contract and identity aliases the CLI created for the local and test networks
+- `.scaffold/state.json`, the record of what this checkout deployed, and the contract aliases it lists, if they still point at those deployments
 
-Reach for it when you want a genuinely fresh deployment. Because Stellar Scaffold only redeploys a contract when the contract itself changes, editing something else — constructor `args` or `after-deploy` in `scaffold.yml`, for instance — will not produce a new instance on its own. Clearing the aliases makes the next `stellar scaffold watch` deploy from scratch.
+Keys are kept. stellar-cli stores them for the whole machine, so other projects may be using them; remove one yourself with `stellar keys rm <name>`.
+
+Reach for it when you want a genuinely fresh deployment. Because Stellar Scaffold only redeploys a contract when the contract itself changes, editing something else — constructor `args` or `after-deploy` in `scaffold.yml`, for instance — will not produce a new instance on its own. Clearing the record makes the next `stellar scaffold watch` deploy from scratch.
 
 ## Doctor Command
 

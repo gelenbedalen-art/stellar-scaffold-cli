@@ -46,9 +46,9 @@ Projects created before `scaffold.yml` version 2 use `environments.toml` instead
 2. The default set with `stellar network use <name>`
 3. `local`
 
-The name must be declared under `networks:`. New projects set `STELLAR_NETWORK=local` in `.env`; switch it to `testnet` to build against testnet. Keep the `PUBLIC_STELLAR_*` values in `.env` pointed at the same network, since those are what your frontend connects to.
+The first line of build output names the network and which of these picked it. The name must be declared under `networks:`. To build against testnet, run `STELLAR_NETWORK=testnet npm start` (or `stellar scaffold build --network testnet`), or set `STELLAR_NETWORK` in the project's `.env`, which the `stellar` CLI loads; a value in your shell wins over `.env`.
 
-Generated clients are bound to the network they were built for: its passphrase and RPC URL are written into `<clients-dir>/index.ts`. Rebuild after switching networks.
+Generated clients are bound to the network they were built for: its passphrase and RPC URL are written into `<clients-dir>/index.ts`, and the frontend templates read the network from there. Rebuild after switching networks.
 
 `STELLAR_SCAFFOLD_ENV` is ignored with a version 2 `scaffold.yml`. The CLI warns if it is set.
 
@@ -221,6 +221,10 @@ after-deploy: [reset, unpause]
 
 When a `workspace` contract's Wasm changes, the next build upgrades the existing deployment if the contract supports it, or redeploys it otherwise. Changing only `args` or `after-deploy` does not trigger a redeploy. Run `stellar scaffold clean` to start fresh.
 
+Scaffold records what it deployed in `.scaffold/state.json`, per network, and decides between upgrading and redeploying from that record. The file belongs to one checkout of your project and isn't committed: the `.scaffold/` directory ignores itself. Separate checkouts, such as git worktrees, keep separate records, so they never upgrade each other's contracts. If the network was reset and a recorded contract is gone, the next build deploys it again.
+
+For running `stellar` commands yourself, Scaffold also saves a contract alias named after the project's directory and the contract, such as `my-app-guess-the-number`. stellar-cli's aliases are shared by every project on the machine, so Scaffold only writes one that is unused or already its own, and warns instead of overwriting an alias someone else made.
+
 If one contract fails to deploy, the build carries on with the rest, exports what it can, and then exits with an error.
 
 ## `extensions`
@@ -297,7 +301,11 @@ after_deploy = "reset"
 id = "C..."
 ```
 
-`build` and `watch` still read this format, and `--network` is ignored for it. To move to version 2:
+`build` and `watch` still read this format, and `--network` is ignored for it.
+
+Scaffold used to find earlier deployments by contract-name aliases such as `guess_the_number`. It now reads only `.scaffold/state.json`, so the first build after upgrading Scaffold deploys every contract again, whether or not you have moved to version 2. Later builds upgrade them as before. The old aliases stay in your stellar-cli config; remove them with `stellar contract alias remove guess_the_number`.
+
+To move to version 2:
 
 - Set `version: 2`. If your old `scaffold.yml` has a `config:` section, replace it with `project:`, renaming `contracts_dir`/`clients_dir` to `contracts-dir`/`clients-dir`.
 - Turn each environment into an entry under `networks:`. `run_locally` becomes `start-container`; an explicit `default = true` account becomes `default-account`.
