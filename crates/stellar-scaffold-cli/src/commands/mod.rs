@@ -90,7 +90,7 @@ impl FromStr for Root {
 pub enum Cmd {
     /// Initialize the project
     Init(init::Cmd),
-    /// Version of the scaffold-stellar-cli
+    /// Version of the stellar-scaffold-cli
     Version(version::Cmd),
 
     /// Build contracts, resolving dependencies in the correct order; build clients (JS packages) as specified in `scaffold.yml`
